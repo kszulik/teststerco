@@ -1,5 +1,5 @@
 Application/User/gui/FrontendApplication.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/TouchGFX/gui/src/common/FrontendApplication.cpp \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/TouchGFX/gui/src/common/FrontendApplication.cpp \
  ../../TouchGFX/gui/include/gui/common/FrontendApplication.hpp \
  ../../TouchGFX/generated/gui_generated/include/gui_generated/common/FrontendApplicationBase.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/mvp/MVPApplication.hpp \

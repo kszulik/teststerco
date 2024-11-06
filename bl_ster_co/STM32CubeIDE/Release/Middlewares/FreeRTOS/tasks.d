@@ -1,5 +1,5 @@
 Middlewares/FreeRTOS/tasks.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
  ../../Core/Inc/FreeRTOSConfig.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \

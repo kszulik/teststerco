@@ -1,5 +1,5 @@
 Application/User/generated/CachedFont.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/TouchGFX/generated/fonts/src/CachedFont.cpp \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/TouchGFX/generated/fonts/src/CachedFont.cpp \
  ../../TouchGFX/generated/fonts/include/fonts/CachedFont.hpp \
  ../../TouchGFX/generated/fonts/include/fonts/FontCache.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Font.hpp \

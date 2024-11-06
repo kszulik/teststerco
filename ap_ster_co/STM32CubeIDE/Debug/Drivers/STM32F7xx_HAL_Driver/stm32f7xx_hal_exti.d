@@ -1,5 +1,5 @@
 Drivers/STM32F7xx_HAL_Driver/stm32f7xx_hal_exti.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_exti.c \
+ C:/Users/kszul/Desktop/teststerco/ap_ster_co/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_exti.c \
  ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h \
  ../../Core/Inc/stm32f7xx_hal_conf.h \
  ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_rcc.h \

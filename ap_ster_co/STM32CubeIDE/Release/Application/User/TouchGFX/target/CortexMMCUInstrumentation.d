@@ -1,5 +1,5 @@
 Application/User/TouchGFX/target/CortexMMCUInstrumentation.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/TouchGFX/target/CortexMMCUInstrumentation.cpp \
+ C:/Users/kszul/Desktop/teststerco/ap_ster_co/TouchGFX/target/CortexMMCUInstrumentation.cpp \
  ../../TouchGFX/target/CortexMMCUInstrumentation.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/platform/core/MCUInstrumentation.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/hal/Types.hpp \

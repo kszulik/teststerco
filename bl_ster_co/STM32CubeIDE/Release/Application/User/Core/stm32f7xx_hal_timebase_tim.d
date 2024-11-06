@@ -1,5 +1,5 @@
 Application/User/Core/stm32f7xx_hal_timebase_tim.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/Core/Src/stm32f7xx_hal_timebase_tim.c \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/Core/Src/stm32f7xx_hal_timebase_tim.c \
  ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h \
  ../../Core/Inc/stm32f7xx_hal_conf.h \
  ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_rcc.h \

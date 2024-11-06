@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: arm-gnu-toolchain-13.2rel1
+# Toolchain: GNU Tools for STM32 (12.3.rel1)
 ################################################################################
 
 -include ../makefile.init
@@ -69,37 +69,37 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := STM32F746G_DISCO
+BUILD_ARTIFACT_NAME := STM32F746G_BOOT
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-STM32F746G_DISCO.elf \
+STM32F746G_BOOT.elf \
 
 MAP_FILES += \
-STM32F746G_DISCO.map \
+STM32F746G_BOOT.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-STM32F746G_DISCO.list \
+STM32F746G_BOOT.list \
 
 OBJCOPY_HEX += \
-STM32F746G_DISCO.hex \
+STM32F746G_BOOT.hex \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: STM32F746G_DISCO.elf secondary-outputs
+main-build: STM32F746G_BOOT.elf secondary-outputs
 
 # Tool invocations
-STM32F746G_DISCO.elf STM32F746G_DISCO.map: $(OBJS) $(USER_OBJS) C:\Users\kszul\Desktop\SterownikCo\SterownikCo\STM32CubeIDE\STM32F746NGHX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "STM32F746G_DISCO.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\kszul\Desktop\SterownikCo\SterownikCo\STM32CubeIDE\STM32F746NGHX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32F746G_DISCO.map" -Wl,--gc-sections -static -L../../Middlewares/ST/touchgfx/lib/core/cortex_m7/gcc --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+STM32F746G_BOOT.elf STM32F746G_BOOT.map: $(OBJS) $(USER_OBJS) C:\Users\kszul\Desktop\teststerco\bl_ster_co\STM32CubeIDE\STM32F746NGHX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "STM32F746G_BOOT.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\kszul\Desktop\teststerco\bl_ster_co\STM32CubeIDE\STM32F746NGHX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32F746G_BOOT.map" -Wl,--gc-sections -static -L../../Middlewares/ST/touchgfx/lib/core/cortex_m7/gcc -Wl,--no-warn-rwx-segments --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -108,19 +108,19 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-STM32F746G_DISCO.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "STM32F746G_DISCO.list"
+STM32F746G_BOOT.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "STM32F746G_BOOT.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-STM32F746G_DISCO.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "STM32F746G_DISCO.hex"
+STM32F746G_BOOT.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "STM32F746G_BOOT.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) STM32F746G_DISCO.elf STM32F746G_DISCO.hex STM32F746G_DISCO.list STM32F746G_DISCO.map default.size.stdout
+	-$(RM) STM32F746G_BOOT.elf STM32F746G_BOOT.hex STM32F746G_BOOT.list STM32F746G_BOOT.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX)

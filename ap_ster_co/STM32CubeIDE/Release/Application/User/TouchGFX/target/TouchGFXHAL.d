@@ -1,5 +1,5 @@
 Application/User/TouchGFX/target/TouchGFXHAL.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/TouchGFX/target/TouchGFXHAL.cpp \
+ C:/Users/kszul/Desktop/teststerco/ap_ster_co/TouchGFX/target/TouchGFXHAL.cpp \
  ../../TouchGFX/target/TouchGFXHAL.hpp \
  ../../TouchGFX/target/generated/TouchGFXGeneratedHAL.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/hal/HAL.hpp \

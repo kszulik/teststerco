@@ -1,6 +1,6 @@
 Application/User/LIBJPEG/App/libjpeg.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/LIBJPEG/App/libjpeg.c \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/LIBJPEG/App/libjpeg.h \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/LIBJPEG/App/libjpeg.c \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/LIBJPEG/App/libjpeg.h \
  ../../Middlewares/Third_Party/LibJPEG/include/jpeglib.h \
  ../../LIBJPEG/Target/jconfig.h ../../LIBJPEG/Target/jdata_conf.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h \
@@ -15,7 +15,7 @@ Application/User/LIBJPEG/App/libjpeg.o: \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/list.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h \
  ../../LIBJPEG/Target/jmorecfg.h
-C:/Users/kszul/Desktop/SterownikCo/SterownikCo/LIBJPEG/App/libjpeg.h:
+C:/Users/kszul/Desktop/teststerco/bl_ster_co/LIBJPEG/App/libjpeg.h:
 ../../Middlewares/Third_Party/LibJPEG/include/jpeglib.h:
 ../../LIBJPEG/Target/jconfig.h:
 ../../LIBJPEG/Target/jdata_conf.h:

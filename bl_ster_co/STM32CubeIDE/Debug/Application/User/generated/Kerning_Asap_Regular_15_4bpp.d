@@ -1,5 +1,5 @@
 Application/User/generated/Kerning_Asap_Regular_15_4bpp.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/TouchGFX/generated/fonts/src/Kerning_Asap_Regular_15_4bpp.cpp \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/TouchGFX/generated/fonts/src/Kerning_Asap_Regular_15_4bpp.cpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Font.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Unicode.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/hal/Types.hpp \

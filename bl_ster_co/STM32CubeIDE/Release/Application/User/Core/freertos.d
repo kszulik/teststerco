@@ -1,5 +1,5 @@
 Application/User/Core/freertos.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/Core/Src/freertos.c \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/Core/Src/freertos.c \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
  ../../Core/Inc/FreeRTOSConfig.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \

@@ -1,5 +1,5 @@
 Middlewares/FreeRTOS/stream_buffer.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c \
+ C:/Users/kszul/Desktop/teststerco/ap_ster_co/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
  ../../Core/Inc/FreeRTOSConfig.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \

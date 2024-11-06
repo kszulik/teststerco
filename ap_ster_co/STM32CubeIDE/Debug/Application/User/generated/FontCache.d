@@ -1,5 +1,5 @@
 Application/User/generated/FontCache.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/TouchGFX/generated/fonts/src/FontCache.cpp \
+ C:/Users/kszul/Desktop/teststerco/ap_ster_co/TouchGFX/generated/fonts/src/FontCache.cpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/TextProvider.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Font.hpp \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Unicode.hpp \

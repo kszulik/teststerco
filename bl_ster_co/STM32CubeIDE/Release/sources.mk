@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: arm-gnu-toolchain-13.2rel1
+# Toolchain: GNU Tools for STM32 (12.3.rel1)
 ################################################################################
 
 C++M_SRCS := 

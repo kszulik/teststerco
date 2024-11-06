@@ -1,5 +1,5 @@
 Middlewares/LibJPEG/jidctflt.o: \
- C:/Users/kszul/Desktop/SterownikCo/SterownikCo/Middlewares/Third_Party/LibJPEG/source/jidctflt.c \
+ C:/Users/kszul/Desktop/teststerco/bl_ster_co/Middlewares/Third_Party/LibJPEG/source/jidctflt.c \
  ../../Middlewares/Third_Party/LibJPEG/include/jinclude.h \
  ../../LIBJPEG/Target/jconfig.h ../../LIBJPEG/Target/jdata_conf.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h \
