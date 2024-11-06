@@ -47,6 +47,21 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 *****************************************************************************
+**
+**                      MAPA SEKCJI PAMIECI FLASH
+**
+**    | Numer sektora | Adres początkowy | Adres końcowy   | Rozmiar   |
+**    |---------------|------------------|-----------------|-----------|
+**    | Sektor 0      | 0x0800 0000      | 0x0800 7FFF     | 32 KB     |
+**    | Sektor 1      | 0x0800 8000      | 0x0800 FFFF     | 32 KB     |
+**    | Sektor 2      | 0x0801 0000      | 0x0801 7FFF     | 32 KB     |
+**    | Sektor 3      | 0x0801 8000      | 0x0801 FFFF     | 32 KB     |
+**    | Sektor 4      | 0x0802 0000      | 0x0803 FFFF     | 128 KB    |
+**    | Sektor 5      | 0x0804 0000      | 0x0807 FFFF     | 256 KB    |
+**    | Sektor 6      | 0x0808 0000      | 0x080B FFFF     | 256 KB    |
+**    | Sektor 7      | 0x080C 0000      | 0x080F FFFF     | 256 KB    |
+** 
+** 
 */
 
 /* Entry Point */
