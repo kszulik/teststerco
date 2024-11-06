@@ -1,0 +1,7 @@
+# Ignore Debug and Release folders
+Debug/
+Release/
+
+# If you want to ignore these folders everywhere in your project, use:
+**/Debug/
+**/Release/
