@@ -5,3 +5,7 @@ Release/
 # If you want to ignore these folders everywhere in your project, use:
 **/Debug/
 **/Release/
+
+# Ignoruj cały folder TouchGFX/build/
+**/TouchGFX/build/
+**/TouchGFX/generated/
