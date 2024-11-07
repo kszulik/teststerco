@@ -44,8 +44,8 @@
 #define SRAM_SIZE       (320 * 1024)  // 320KB SRAM
 #define SRAM_END        (SRAM_BASE + SRAM_SIZE)
 
-#define FLASH_BASE  0x08000000
-#define FLASH_END       (FLASH_BASE + 0x100000)  // 1MB FLASH
+//#define FLASH_BASE  0x08000000
+//#define FLASH_END       (FLASH_BASE + 0x100000)  // 1MB FLASH
 
 // #define MAGIC_NUMBER_OFFSET 0x200  // Przykładowy offset
 // #define EXPECTED_MAGIC_NUMBER 0x12345678  // Przykładowa magiczna liczba
