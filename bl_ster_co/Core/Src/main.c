@@ -36,6 +36,21 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+#define APPLICATION_ADDRESS     0x08008000
+#define BOOTLOADER_SIZE         0x8000  // 32 KB
+
+
+#define SRAM_BASE       0x20000000
+#define SRAM_SIZE       (320 * 1024)  // 320KB SRAM
+#define SRAM_END        (SRAM_BASE + SRAM_SIZE)
+
+#define FLASH_BASE  0x08000000
+#define FLASH_END       (FLASH_BASE + 0x100000)  // 1MB FLASH
+
+// #define MAGIC_NUMBER_OFFSET 0x200  // Przykładowy offset
+// #define EXPECTED_MAGIC_NUMBER 0x12345678  // Przykładowa magiczna liczba
+
+
 #define REFRESH_COUNT        1835
 
 #define SDRAM_TIMEOUT                            ((uint32_t)0xFFFF)
@@ -113,10 +128,16 @@ extern void videoTaskFunc(void *argument);
 
 /* USER CODE BEGIN PFP */
 BaseType_t IdleTaskHook(void* p);
+
+static void Jump_To_Application(void);
+static uint8_t Check_Application_Present(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+typedef void (*pFunction)(void);
+
 
 
 #define FRAME_BUFFER_ADDRESS 0xC0000000
@@ -255,7 +276,7 @@ void DrawString(uint16_t *buffer, const char *str, uint32_t x, uint32_t y, uint1
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
+int boot_main(void)
 {
 
   /* USER CODE BEGIN 1 */
@@ -307,7 +328,42 @@ int main(void)
   // Clear the frame buffer
   memset(frameBuffer, 0, FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
   // Draw a string on the screen
-  DrawString(frameBuffer, "utworzylem projekt", 100, 100, 0x001F); // White color
+  DrawString(frameBuffer, "START BOOT", 100, 100, 0x001F); // White color
+
+
+  HAL_Delay(5000);
+
+
+
+  memset(frameBuffer, 0, FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
+
+  DrawString(frameBuffer, "CHECK FIRMWARE", 100, 100, 0x001F); // White color
+
+  HAL_Delay(5000);
+
+  if (Check_Application_Present())
+  {
+      memset(frameBuffer, 0, FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
+
+       DrawString(frameBuffer, "RUN FIRMWARE", 100, 100, 0x001F); // White color
+
+       HAL_Delay(5000);
+
+      Jump_To_Application();
+  }
+  else
+  {
+      HAL_Delay(5000);
+
+      memset(frameBuffer, 0, FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
+
+      DrawString(frameBuffer, "NO FIRMWARE DETECTED", 100, 100, 0x001F); // White color
+    // No valid application, stay in bootloader
+    // Here you can add code to wait for new firmware, e.g., via UART or USB
+  }
+
+
+
 
   /* USER CODE END 2 */
 
@@ -811,6 +867,95 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+static void Jump_To_Application(void)
+{
+  // Disable all interrupts
+      __disable_irq();
+
+      // Stop all RTOS tasks and scheduler
+      vTaskSuspendAll();
+      taskENTER_CRITICAL();
+
+      // Deinitialize all peripherals
+      HAL_CRC_DeInit(&hcrc);
+      HAL_DMA2D_DeInit(&hdma2d);
+      HAL_I2C_DeInit(&hi2c3);
+      HAL_LTDC_DeInit(&hltdc);
+      HAL_QSPI_DeInit(&hqspi);
+      HAL_SDRAM_DeInit(&hsdram1);
+
+      // Reset clocks to default state
+      HAL_RCC_DeInit();
+
+      // Disable MPU
+      HAL_MPU_Disable();
+
+      // Disable and clean caches
+      SCB_DisableICache();
+      SCB_DisableDCache();
+      SCB_InvalidateICache();
+      SCB_CleanInvalidateDCache();
+
+      // Disable SysTick
+      SysTick->CTRL = 0;
+
+      // Reset all peripherals
+      HAL_DeInit();
+
+      // Set the vector table to the application's vector table
+      SCB->VTOR = APPLICATION_ADDRESS;
+
+      // Set the stack pointer to the application's stack pointer
+      __set_MSP(*(__IO uint32_t*)APPLICATION_ADDRESS);
+
+      // Jump to the application
+      ((void (*)(void))(*(__IO uint32_t*)(APPLICATION_ADDRESS + 4)))();
+}
+
+//static uint8_t Check_Application_Present(void)
+//{
+//  // Check if the stack pointer in the vector table is a valid RAM address
+//  if (((*(uint32_t*)APPLICATION_ADDRESS) & 0x2FFE0000) == 0x20000000)
+//  {
+//    return 1;  // Application is present
+//  }
+//  return 0;  // No valid application found
+//}
+
+
+
+
+static uint8_t Check_Application_Present(void)
+{
+  // Sprawdź, czy wskaźnik stosu w tablicy wektorów jest w zakresie SRAM
+      uint32_t sp = *(volatile uint32_t*)APPLICATION_ADDRESS;
+      if (sp < SRAM_BASE || sp > SRAM_END)
+      {
+          return 0;  // Nieprawidłowy wskaźnik stosu
+      }
+
+      // Sprawdź, czy wektor resetu wskazuje na prawidłowy adres flash
+      uint32_t pc = *(volatile uint32_t*)(APPLICATION_ADDRESS + 4);
+      if (pc < FLASH_BASE || pc > FLASH_END)
+      {
+          return 0;  // Nieprawidłowy wektor resetu
+      }
+
+  // Sprawdź, czy pierwsze kilka wektorów przerwań nie jest pustych (0xFFFFFFFF)
+  for (int i = 0; i < 8; i++)
+  {
+      uint32_t vector = *(volatile uint32_t*)(APPLICATION_ADDRESS + i * 4);
+      if (vector == 0xFFFFFFFF)
+      {
+          return 0;  // Znaleziono pusty wektor
+      }
+  }
+
+  // Jeśli wszystkie sprawdzenia przejdą, zakładamy, że aplikacja jest obecna
+  return 1;
+}
+
 
 /* USER CODE END 4 */
 
