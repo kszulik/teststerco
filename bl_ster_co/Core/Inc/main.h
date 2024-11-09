@@ -43,6 +43,8 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 
+
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -72,7 +74,7 @@ void Error_Handler(void);
 #define MCU_ACTIVE_GPIO_Port GPIOG
 
 /* USER CODE BEGIN Private defines */
-
+void Peripherial_DeInit(void);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

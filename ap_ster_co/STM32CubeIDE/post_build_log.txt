@@ -1,0 +1,30 @@
+Post-build script started at 08.11.2024 12:34:49,02 
+Parametry skryptu: 
+MAJOR=0 
+MINOR=0 
+PATCH=3 
+HEX_FILE=STM32F746G_DISCO.hex 
+OUTPUT_FILE_PREFIX=STM32F746G 
+INCLUDE_VERSION_IN_FILENAME=1 
+CONFIG_NAME=Release 
+Current directory: D:\teststerco\ap_ster_co\STM32CubeIDE\Release 
+Script directory: D:\teststerco\ap_ster_co\STM32CubeIDE\ 
+Pelna sciezka do pliku HEX: D:\teststerco\ap_ster_co\STM32CubeIDE\Release\STM32F746G_DISCO.hex 
+--- 
+MAJOR=0 
+MINOR=0 
+PATCH=3 
+VERSION=0.0.3 
+HEX_FILE=STM32F746G_DISCO.hex 
+FULL_HEX_PATH=D:\teststerco\ap_ster_co\STM32CubeIDE\Release\STM32F746G_DISCO.hex 
+OUTPUT_FILE_PREFIX=STM32F746G 
+INCLUDE_VERSION_IN_FILENAME=1 
+OUTPUT_HEX_FILE=STM32F746G_0.0.3_Release.hex 
+FULL_OUTPUT_PATH=D:\teststerco\ap_ster_co\STM32CubeIDE\Release\STM32F746G_0.0.3_Release.hex 
+CONFIG_NAME=Release 
+--- 
+Sprawdzanie istnienia pliku D:\teststerco\ap_ster_co\STM32CubeIDE\Release\STM32F746G_DISCO.hex 
+Sprawdzanie, czy plik docelowy D:\teststerco\ap_ster_co\STM32CubeIDE\Release\STM32F746G_0.0.3_Release.hex juz istnieje 
+Proba zmiany nazwy pliku... 
+Wygenerowano plik HEX: D:\teststerco\ap_ster_co\STM32CubeIDE\Release\STM32F746G_0.0.3_Release.hex 
+Post-build script finished at 08.11.2024 12:34:49,10 

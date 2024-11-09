@@ -39,6 +39,11 @@
 			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/STM32F746G_BOOT.ioc</locationURI>
 		</link>
 		<link>
+			<name>ster_co_common</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/ster_co_common</locationURI>
+		</link>
+		<link>
 			<name>Drivers/BSP/stm32746g_discovery_qspi.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/STM32746G-Discovery/stm32746g_discovery_qspi.c</locationURI>

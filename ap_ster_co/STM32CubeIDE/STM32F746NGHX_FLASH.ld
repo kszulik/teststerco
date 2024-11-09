@@ -52,16 +52,17 @@
 **
 **    | Numer sektora | Adres początkowy | Adres końcowy   | Rozmiar   |
 **    |---------------|------------------|-----------------|-----------|
-**    | Sektor 0      | 0x0800 0000      | 0x0800 7FFF     | 32 KB     |
-**    | Sektor 1      | 0x0800 8000      | 0x0800 FFFF     | 32 KB     |
-**    | Sektor 2      | 0x0801 0000      | 0x0801 7FFF     | 32 KB     |
-**    | Sektor 3      | 0x0801 8000      | 0x0801 FFFF     | 32 KB     |
-**    | Sektor 4      | 0x0802 0000      | 0x0803 FFFF     | 128 KB    |
-**    | Sektor 5      | 0x0804 0000      | 0x0807 FFFF     | 256 KB    |
-**    | Sektor 6      | 0x0808 0000      | 0x080B FFFF     | 256 KB    |
-**    | Sektor 7      | 0x080C 0000      | 0x080F FFFF     | 256 KB    |
+**    | Sektor 0      | 0x0800 0000      | 0x0800 7FFF     | 32 KB     |  BOOTLOADER
+**    | Sektor 1      | 0x0800 8000      | 0x0800 FFFF     | 32 KB     |  BOOTLOADER
+**    | Sektor 2      | 0x0801 0000      | 0x0801 7FFF     | 32 KB     |  APP
+**    | Sektor 3      | 0x0801 8000      | 0x0801 FFFF     | 32 KB     |  APP
+**    | Sektor 4      | 0x0802 0000      | 0x0803 FFFF     | 128 KB    |  APP
+**    | Sektor 5      | 0x0804 0000      | 0x0807 FFFF     | 256 KB    |  APP
+**    | Sektor 6      | 0x0808 0000      | 0x080B FFFF     | 256 KB    |  APP
+**    | Sektor 7      | 0x080C 0000      | 0x080F FFFF     | 256 KB    |  APP
 ** 
 ** 
+*****************************************************************************
 */
 
 /* Entry Point */
@@ -74,26 +75,48 @@ _Min_Heap_Size = 0xa00 ;  /* required amount of heap  */
 _Min_Stack_Size = 0xa00 ; /* required amount of stack */
 
 /* Memories definition */
+VERSION_SIZE = 16;
+
 MEMORY
 {
-  RAM     (xrw)  : ORIGIN = 0x20000000,  LENGTH = 320K
-  FLASH   (rx)   : ORIGIN = 0x08008000,  LENGTH = 992K
-  QUADSPI (r)    : ORIGIN = 0x90000000,  LENGTH = 16M
-  SDRAM   (xrw)  : ORIGIN = 0xC0000000,  LENGTH = 8M
+  RAM          (xrw)  : ORIGIN = 0x20000000,  LENGTH = 320K 
+  BOOT_FLASH   (rx)   : ORIGIN = 0x08000000,  LENGTH = 64K - VERSION_SIZE  
+  VERSION_BOOT (rx)   : ORIGIN = 0x0800FFF0,  LENGTH = VERSION_SIZE          
+  APP_FLASH    (rx)   : ORIGIN = 0x08010000,  LENGTH = 960K - VERSION_SIZE 
+  VERSION_APP  (rx)   : ORIGIN = 0x080FFFF0,  LENGTH = VERSION_SIZE         
+  QUADSPI      (r)    : ORIGIN = 0x90000000,  LENGTH = 16M
+  SDRAM        (xrw)  : ORIGIN = 0xC0000000,  LENGTH = 8M
 }
+
 
 /* Sections */
 SECTIONS
-{
-  /* The startup code into "FLASH" Rom type memory */
+{ 
+  /* Sekcja z numerem wersji bootloadera */
+  .boot_version_section :
+  {
+    __version_boot_start = .;  /* Symbol początku sekcji */  
+    KEEP(*(.boot_version_section))
+    __version_boot_end = .;    /* Symbol końca sekcji */
+  } > VERSION_BOOT
+  
+    /* Sekcja z numerem wersji aplikacji */
+  .app_version_section :
+  {
+    __version_app_start = .;  /* Symbol początku sekcji */
+    KEEP(*(.app_version_section))
+    __version_app_end = .;    /* Symbol końca sekcji */
+  } > VERSION_APP
+  
+  /* The startup code into "APP_FLASH" Rom type memory */
   .isr_vector :
   {
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
-  } >FLASH
+  } >APP_FLASH
 
-  /* The program code and other data into "FLASH" Rom type memory */
+  /* The program code and other data into "APP_FLASH" Rom type memory */
   .text :
   {
     . = ALIGN(4);
@@ -108,22 +131,22 @@ SECTIONS
 
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
-  } >FLASH
+  } >APP_FLASH
 
-  /* Constant data into "FLASH" Rom type memory */
+  /* Constant data into "APP_FLASH" Rom type memory */
   .rodata :
   {
     . = ALIGN(4);
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
-  } >FLASH
+  } >APP_FLASH
 
   .ARM.extab   : {
     . = ALIGN(4);
     *(.ARM.extab* .gnu.linkonce.armextab.*)
     . = ALIGN(4);
-  } >FLASH
+  } >APP_FLASH
 
   .ARM : {
     . = ALIGN(4);
@@ -131,7 +154,7 @@ SECTIONS
     *(.ARM.exidx*)
     __exidx_end = .;
     . = ALIGN(4);
-  } >FLASH
+  } >APP_FLASH
 
   .preinit_array     :
   {
@@ -140,7 +163,7 @@ SECTIONS
     KEEP (*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
     . = ALIGN(4);
-  } >FLASH
+  } >APP_FLASH
 
   .init_array :
   {
@@ -150,7 +173,7 @@ SECTIONS
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
     . = ALIGN(4);
-  } >FLASH
+  } >APP_FLASH
 
   .fini_array :
   {
@@ -160,7 +183,7 @@ SECTIONS
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
     . = ALIGN(4);
-  } >FLASH
+  } >APP_FLASH
 
   /* Used by the startup to initialize data */
   _sidata = LOADADDR(.data);
@@ -176,7 +199,7 @@ SECTIONS
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
 
-  } >RAM AT> FLASH
+  } >RAM AT> APP_FLASH
 
   /* Uninitialized data section into "RAM" Ram type memory */
   . = ALIGN(4);

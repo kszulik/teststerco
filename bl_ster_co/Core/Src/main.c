@@ -1,27 +1,29 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under Ultimate Liberty license
+ * SLA0044, the "License"; You may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at:
+ *                             www.st.com/SLA0044
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 #include "cmsis_os.h"
 #include "string.h"
-
+#include "memory.h"
+#include "boot.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -31,40 +33,26 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define APPLICATION_ADDRESS     0x08008000
-#define BOOTLOADER_SIZE         0x8000  // 32 KB
+#define REFRESH_COUNT 1835
 
-
-#define SRAM_BASE       0x20000000
-#define SRAM_SIZE       (320 * 1024)  // 320KB SRAM
-#define SRAM_END        (SRAM_BASE + SRAM_SIZE)
-
-//#define FLASH_BASE  0x08000000
-//#define FLASH_END       (FLASH_BASE + 0x100000)  // 1MB FLASH
-
-// #define MAGIC_NUMBER_OFFSET 0x200  // Przykładowy offset
-// #define EXPECTED_MAGIC_NUMBER 0x12345678  // Przykładowa magiczna liczba
-
-
-#define REFRESH_COUNT        1835
-
-#define SDRAM_TIMEOUT                            ((uint32_t)0xFFFF)
-#define SDRAM_MODEREG_BURST_LENGTH_1             ((uint16_t)0x0000)
-#define SDRAM_MODEREG_BURST_LENGTH_2             ((uint16_t)0x0001)
-#define SDRAM_MODEREG_BURST_LENGTH_4             ((uint16_t)0x0002)
-#define SDRAM_MODEREG_BURST_LENGTH_8             ((uint16_t)0x0004)
-#define SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL      ((uint16_t)0x0000)
-#define SDRAM_MODEREG_BURST_TYPE_INTERLEAVED     ((uint16_t)0x0008)
-#define SDRAM_MODEREG_CAS_LATENCY_2              ((uint16_t)0x0020)
-#define SDRAM_MODEREG_CAS_LATENCY_3              ((uint16_t)0x0030)
-#define SDRAM_MODEREG_OPERATING_MODE_STANDARD    ((uint16_t)0x0000)
+#define SDRAM_TIMEOUT ((uint32_t)0xFFFF)
+#define SDRAM_MODEREG_BURST_LENGTH_1 ((uint16_t)0x0000)
+#define SDRAM_MODEREG_BURST_LENGTH_2 ((uint16_t)0x0001)
+#define SDRAM_MODEREG_BURST_LENGTH_4 ((uint16_t)0x0002)
+#define SDRAM_MODEREG_BURST_LENGTH_8 ((uint16_t)0x0004)
+#define SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL ((uint16_t)0x0000)
+#define SDRAM_MODEREG_BURST_TYPE_INTERLEAVED ((uint16_t)0x0008)
+#define SDRAM_MODEREG_CAS_LATENCY_2 ((uint16_t)0x0020)
+#define SDRAM_MODEREG_CAS_LATENCY_3 ((uint16_t)0x0030)
+#define SDRAM_MODEREG_OPERATING_MODE_STANDARD ((uint16_t)0x0000)
 #define SDRAM_MODEREG_WRITEBURST_MODE_PROGRAMMED ((uint16_t)0x0000)
-#define SDRAM_MODEREG_WRITEBURST_MODE_SINGLE     ((uint16_t)0x0200)
+#define SDRAM_MODEREG_WRITEBURST_MODE_SINGLE ((uint16_t)0x0200)
 
 /* USER CODE END PD */
 
@@ -90,24 +78,24 @@ SDRAM_HandleTypeDef hsdram1;
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "defaultTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
 };
 ///* Definitions for TouchGFXTask */
-//osThreadId_t TouchGFXTaskHandle;
-//const osThreadAttr_t TouchGFXTask_attributes = {
-//  .name = "TouchGFXTask",
-//  .stack_size = 4096 * 4,
-//  .priority = (osPriority_t) osPriorityNormal,
-//};
+// osThreadId_t TouchGFXTaskHandle;
+// const osThreadAttr_t TouchGFXTask_attributes = {
+//   .name = "TouchGFXTask",
+//   .stack_size = 4096 * 4,
+//   .priority = (osPriority_t) osPriorityNormal,
+// };
 ///* Definitions for videoTask */
-//osThreadId_t videoTaskHandle;
-//const osThreadAttr_t videoTask_attributes = {
-//  .name = "videoTask",
-//  .stack_size = 1000 * 4,
-//  .priority = (osPriority_t) osPriorityLow,
-//};
+// osThreadId_t videoTaskHandle;
+// const osThreadAttr_t videoTask_attributes = {
+//   .name = "videoTask",
+//   .stack_size = 1000 * 4,
+//   .priority = (osPriority_t) osPriorityLow,
+// };
 /* USER CODE BEGIN PV */
 static FMC_SDRAM_CommandTypeDef Command;
 /* USER CODE END PV */
@@ -127,10 +115,8 @@ extern void TouchGFX_Task(void *argument);
 extern void videoTaskFunc(void *argument);
 
 /* USER CODE BEGIN PFP */
-BaseType_t IdleTaskHook(void* p);
+BaseType_t IdleTaskHook(void *p);
 
-static void Jump_To_Application(void);
-static uint8_t Check_Application_Present(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -138,149 +124,147 @@ static uint8_t Check_Application_Present(void);
 
 typedef void (*pFunction)(void);
 
-
-
 #define FRAME_BUFFER_ADDRESS 0xC0000000
-#define FRAME_BUFFER_WIDTH  480
+#define FRAME_BUFFER_WIDTH 480
 #define FRAME_BUFFER_HEIGHT 272
 #define FONT_WIDTH 10
 #define FONT_HEIGHT 7
 // Simple 5x7 font for ASCII characters 32-127
 const uint8_t font[96][FONT_HEIGHT] = {
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // Space
-    {0x04, 0x04, 0x04, 0x04, 0x00, 0x00, 0x04},   // !
-    {0x0A, 0x0A, 0x0A, 0x00, 0x00, 0x00, 0x00},   // "
-    {0x0A, 0x0A, 0x1F, 0x0A, 0x1F, 0x0A, 0x0A},   // #
-    {0x04, 0x0F, 0x14, 0x0E, 0x05, 0x1E, 0x04},   // $
-    {0x18, 0x19, 0x02, 0x04, 0x08, 0x13, 0x03},   // %
-    {0x0C, 0x12, 0x14, 0x08, 0x15, 0x12, 0x0D},   // &
-    {0x0C, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00},   // '
-    {0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02},   // (
-    {0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08},   // )
-    {0x00, 0x04, 0x15, 0x0E, 0x15, 0x04, 0x00},   // *
-    {0x00, 0x04, 0x04, 0x1F, 0x04, 0x04, 0x00},   // +
-    {0x00, 0x00, 0x00, 0x00, 0x0C, 0x04, 0x08},   // ,
-    {0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00},   // -
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C},   // .
-    {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x00},   // /
-    {0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E},   // 0
-    {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},   // 1
-    {0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F},   // 2
-    {0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E},   // 3
-    {0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02},   // 4
-    {0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E},   // 5
-    {0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E},   // 6
-    {0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08},   // 7
-    {0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E},   // 8
-    {0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C},   // 9
-    {0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00},   // :
-    {0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x04, 0x08},   // ;
-    {0x02, 0x04, 0x08, 0x10, 0x08, 0x04, 0x02},   // <
-    {0x00, 0x00, 0x1F, 0x00, 0x1F, 0x00, 0x00},   // =
-    {0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08},   // >
-    {0x0E, 0x11, 0x01, 0x02, 0x04, 0x00, 0x04},   // ?
-    {0x0E, 0x11, 0x17, 0x15, 0x17, 0x10, 0x0F},   // @
-    {0x04, 0x0A, 0x11, 0x11, 0x1F, 0x11, 0x11},   // A
-    {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E},   // B
-    {0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E},   // C
-    {0x1C, 0x12, 0x11, 0x11, 0x11, 0x12, 0x1C},   // D
-    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F},   // E
-    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10},   // F
-    {0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F},   // G
-    {0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11},   // H
-    {0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E},   // I
-    {0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C},   // J
-    {0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11},   // K
-    {0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F},   // L
-    {0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11},   // M
-    {0x11, 0x11, 0x19, 0x15, 0x13, 0x11, 0x11},   // N
-    {0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E},   // O
-    {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},   // P
-    {0x0E, 0x11, 0x11, 0x11, 0x15, 0x12, 0x0D},   // Q
-    {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11},   // R
-    {0x0E, 0x11, 0x10, 0x0E, 0x01, 0x11, 0x0E},   // S
-    {0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04},   // T
-    {0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E},   // U
-    {0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04},   // V
-    {0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11},   // W
-    {0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11},   // X
-    {0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04},   // Y
-    {0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F},   // Z
-    {0x0E, 0x08, 0x08, 0x08, 0x08, 0x08, 0x0E},   // [
-    {0x00, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00},   // '\'
-    {0x0E, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0E},   // ]
-    {0x04, 0x0A, 0x11, 0x00, 0x00, 0x00, 0x00},   // ^
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F},   // _
-    {0x08, 0x04, 0x02, 0x00, 0x00, 0x00, 0x00},   // `
-    {0x00, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F},   // a
-    {0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x1E},   // b
-    {0x00, 0x00, 0x0E, 0x10, 0x10, 0x11, 0x0E},   // c
-    {0x01, 0x01, 0x0D, 0x13, 0x11, 0x11, 0x0F},   // d
-    {0x00, 0x00, 0x0E, 0x11, 0x1F, 0x10, 0x0E},   // e
-    {0x06, 0x09, 0x08, 0x1C, 0x08, 0x08, 0x08},   // f
-    {0x00, 0x0F, 0x11, 0x11, 0x0F, 0x01, 0x0E},   // g
-    {0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x11},   // h
-    {0x04, 0x00, 0x0C, 0x04, 0x04, 0x04, 0x0E},   // i
-    {0x02, 0x00, 0x06, 0x02, 0x02, 0x12, 0x0C},   // j
-    {0x10, 0x10, 0x12, 0x14, 0x18, 0x14, 0x12},   // k
-    {0x0C, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E},   // l
-    {0x00, 0x00, 0x1A, 0x15, 0x15, 0x11, 0x11},   // m
-    {0x00, 0x00, 0x16, 0x19, 0x11, 0x11, 0x11},   // n
-    {0x00, 0x00, 0x0E, 0x11, 0x11, 0x11, 0x0E},   // o
-    {0x00, 0x00, 0x1E, 0x11, 0x1E, 0x10, 0x10},   // p
-    {0x00, 0x00, 0x0D, 0x13, 0x0F, 0x01, 0x01},   // q
-    {0x00, 0x00, 0x16, 0x19, 0x10, 0x10, 0x10},   // r
-    {0x00, 0x00, 0x0E, 0x10, 0x0E, 0x01, 0x1E},   // s
-    {0x08, 0x08, 0x1C, 0x08, 0x08, 0x09, 0x06},   // t
-    {0x00, 0x00, 0x11, 0x11, 0x11, 0x13, 0x0D},   // u
-    {0x00, 0x00, 0x11, 0x11, 0x11, 0x0A, 0x04},   // v
-    {0x00, 0x00, 0x11, 0x11, 0x15, 0x15, 0x0A},   // w
-    {0x00, 0x00, 0x11, 0x0A, 0x04, 0x0A, 0x11},   // x
-    {0x00, 0x00, 0x11, 0x11, 0x0F, 0x01, 0x0E},   // y
-    {0x00, 0x00, 0x1F, 0x02, 0x04, 0x08, 0x1F},   // z
-    {0x02, 0x04, 0x04, 0x08, 0x04, 0x04, 0x02},   // {
-    {0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04},   // |
-    {0x08, 0x04, 0x04, 0x02, 0x04, 0x04, 0x08},   // }
-    {0x00, 0x00, 0x0D, 0x12, 0x00, 0x00, 0x00},   // ~
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}    // DEL
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  // Space
+    {0x04, 0x04, 0x04, 0x04, 0x00, 0x00, 0x04},  // !
+    {0x0A, 0x0A, 0x0A, 0x00, 0x00, 0x00, 0x00},  // "
+    {0x0A, 0x0A, 0x1F, 0x0A, 0x1F, 0x0A, 0x0A},  // #
+    {0x04, 0x0F, 0x14, 0x0E, 0x05, 0x1E, 0x04},  // $
+    {0x18, 0x19, 0x02, 0x04, 0x08, 0x13, 0x03},  // %
+    {0x0C, 0x12, 0x14, 0x08, 0x15, 0x12, 0x0D},  // &
+    {0x0C, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00},  // '
+    {0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02},  // (
+    {0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08},  // )
+    {0x00, 0x04, 0x15, 0x0E, 0x15, 0x04, 0x00},  // *
+    {0x00, 0x04, 0x04, 0x1F, 0x04, 0x04, 0x00},  // +
+    {0x00, 0x00, 0x00, 0x00, 0x0C, 0x04, 0x08},  // ,
+    {0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00},  // -
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C},  // .
+    {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x00},  // /
+    {0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E},  // 0
+    {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},  // 1
+    {0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F},  // 2
+    {0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E},  // 3
+    {0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02},  // 4
+    {0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E},  // 5
+    {0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E},  // 6
+    {0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08},  // 7
+    {0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E},  // 8
+    {0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C},  // 9
+    {0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00},  // :
+    {0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x04, 0x08},  // ;
+    {0x02, 0x04, 0x08, 0x10, 0x08, 0x04, 0x02},  // <
+    {0x00, 0x00, 0x1F, 0x00, 0x1F, 0x00, 0x00},  // =
+    {0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08},  // >
+    {0x0E, 0x11, 0x01, 0x02, 0x04, 0x00, 0x04},  // ?
+    {0x0E, 0x11, 0x17, 0x15, 0x17, 0x10, 0x0F},  // @
+    {0x04, 0x0A, 0x11, 0x11, 0x1F, 0x11, 0x11},  // A
+    {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E},  // B
+    {0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E},  // C
+    {0x1C, 0x12, 0x11, 0x11, 0x11, 0x12, 0x1C},  // D
+    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F},  // E
+    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10},  // F
+    {0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F},  // G
+    {0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11},  // H
+    {0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E},  // I
+    {0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C},  // J
+    {0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11},  // K
+    {0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F},  // L
+    {0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11},  // M
+    {0x11, 0x11, 0x19, 0x15, 0x13, 0x11, 0x11},  // N
+    {0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E},  // O
+    {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},  // P
+    {0x0E, 0x11, 0x11, 0x11, 0x15, 0x12, 0x0D},  // Q
+    {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11},  // R
+    {0x0E, 0x11, 0x10, 0x0E, 0x01, 0x11, 0x0E},  // S
+    {0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04},  // T
+    {0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E},  // U
+    {0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04},  // V
+    {0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11},  // W
+    {0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11},  // X
+    {0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04},  // Y
+    {0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F},  // Z
+    {0x0E, 0x08, 0x08, 0x08, 0x08, 0x08, 0x0E},  // [
+    {0x00, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00},  // '\'
+    {0x0E, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0E},  // ]
+    {0x04, 0x0A, 0x11, 0x00, 0x00, 0x00, 0x00},  // ^
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F},  // _
+    {0x08, 0x04, 0x02, 0x00, 0x00, 0x00, 0x00},  // `
+    {0x00, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F},  // a
+    {0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x1E},  // b
+    {0x00, 0x00, 0x0E, 0x10, 0x10, 0x11, 0x0E},  // c
+    {0x01, 0x01, 0x0D, 0x13, 0x11, 0x11, 0x0F},  // d
+    {0x00, 0x00, 0x0E, 0x11, 0x1F, 0x10, 0x0E},  // e
+    {0x06, 0x09, 0x08, 0x1C, 0x08, 0x08, 0x08},  // f
+    {0x00, 0x0F, 0x11, 0x11, 0x0F, 0x01, 0x0E},  // g
+    {0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x11},  // h
+    {0x04, 0x00, 0x0C, 0x04, 0x04, 0x04, 0x0E},  // i
+    {0x02, 0x00, 0x06, 0x02, 0x02, 0x12, 0x0C},  // j
+    {0x10, 0x10, 0x12, 0x14, 0x18, 0x14, 0x12},  // k
+    {0x0C, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E},  // l
+    {0x00, 0x00, 0x1A, 0x15, 0x15, 0x11, 0x11},  // m
+    {0x00, 0x00, 0x16, 0x19, 0x11, 0x11, 0x11},  // n
+    {0x00, 0x00, 0x0E, 0x11, 0x11, 0x11, 0x0E},  // o
+    {0x00, 0x00, 0x1E, 0x11, 0x1E, 0x10, 0x10},  // p
+    {0x00, 0x00, 0x0D, 0x13, 0x0F, 0x01, 0x01},  // q
+    {0x00, 0x00, 0x16, 0x19, 0x10, 0x10, 0x10},  // r
+    {0x00, 0x00, 0x0E, 0x10, 0x0E, 0x01, 0x1E},  // s
+    {0x08, 0x08, 0x1C, 0x08, 0x08, 0x09, 0x06},  // t
+    {0x00, 0x00, 0x11, 0x11, 0x11, 0x13, 0x0D},  // u
+    {0x00, 0x00, 0x11, 0x11, 0x11, 0x0A, 0x04},  // v
+    {0x00, 0x00, 0x11, 0x11, 0x15, 0x15, 0x0A},  // w
+    {0x00, 0x00, 0x11, 0x0A, 0x04, 0x0A, 0x11},  // x
+    {0x00, 0x00, 0x11, 0x11, 0x0F, 0x01, 0x0E},  // y
+    {0x00, 0x00, 0x1F, 0x02, 0x04, 0x08, 0x1F},  // z
+    {0x02, 0x04, 0x04, 0x08, 0x04, 0x04, 0x02},  // {
+    {0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04},  // |
+    {0x08, 0x04, 0x04, 0x02, 0x04, 0x04, 0x08},  // }
+    {0x00, 0x00, 0x0D, 0x12, 0x00, 0x00, 0x00},  // ~
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}   // DEL
 };
 
 void SetPixel(uint16_t *buffer, uint32_t x, uint32_t y, uint16_t color) {
-    if (x < FRAME_BUFFER_WIDTH && y < FRAME_BUFFER_HEIGHT) {
-        buffer[y * FRAME_BUFFER_WIDTH + x] = color;
-    }
+  if (x < FRAME_BUFFER_WIDTH && y < FRAME_BUFFER_HEIGHT) {
+    buffer[y * FRAME_BUFFER_WIDTH + x] = color;
+  }
 }
 
-void DrawChar(uint16_t *buffer, char c, uint32_t x, uint32_t y, uint16_t color) {
-    if (c < 32 || c > 127) return; // Only support ASCII 32-127
-    const uint8_t *bitmap = font[c - 32];
-    for (uint32_t row = 0; row < FONT_HEIGHT; row++) {
-        for (uint32_t col = 0; col < FONT_WIDTH; col++) {
-            if (bitmap[row] & (1 << col)) {
-                SetPixel(buffer, x + col, y + row, color);
-            }
-        }
+void DrawChar(uint16_t *buffer, char c, uint32_t x, uint32_t y,
+              uint16_t color) {
+  if (c < 32 || c > 127) return;  // Only support ASCII 32-127
+  const uint8_t *bitmap = font[c - 32];
+  for (uint32_t row = 0; row < FONT_HEIGHT; row++) {
+    for (uint32_t col = 0; col < FONT_WIDTH; col++) {
+      if (bitmap[row] & (1 << col)) {
+        SetPixel(buffer, x + col, y + row, color);
+      }
     }
+  }
 }
 
-void DrawString(uint16_t *buffer, const char *str, uint32_t x, uint32_t y, uint16_t color) {
-    while (*str) {
-        DrawChar(buffer, *str++, x, y, color);
-        x += FONT_WIDTH + 1; // Move to the next character position
-    }
+void DrawString(uint16_t *buffer, const char *str, uint32_t x, uint32_t y,
+                uint16_t color) {
+  while (*str) {
+    DrawChar(buffer, *str++, x, y, color);
+    x += FONT_WIDTH + 1;  // Move to the next character position
+  }
 }
 
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int boot_main(void)
-{
-
+ * @brief  The application entry point.
+ * @retval int
+ */
+int boot_main(void) {
   /* USER CODE BEGIN 1 */
-
+  versionInit();
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -296,7 +280,8 @@ int boot_main(void)
 
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick.
+   */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -319,51 +304,47 @@ int boot_main(void)
   MX_LTDC_Init();
   MX_QUADSPI_Init();
 
-
-
   /* USER CODE BEGIN 2 */
+
+#define delay_time 1000
 
   // Get the frame buffer address
   uint16_t *frameBuffer = (uint16_t *)FRAME_BUFFER_ADDRESS;
   // Clear the frame buffer
-  memset(frameBuffer, 0, FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
+  memset(frameBuffer, 0,
+         FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
   // Draw a string on the screen
-  DrawString(frameBuffer, "START BOOT", 100, 100, 0x001F); // White color
+  DrawString(frameBuffer, "START BOOT", 100, 100, 0x001F);  // White color
 
+  HAL_Delay(delay_time);
 
-  HAL_Delay(5000);
+  memset(frameBuffer, 0,
+         FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
 
+  DrawString(frameBuffer, "CHECK FIRMWARE", 100, 100, 0x001F);  // White color
 
+  HAL_Delay(delay_time);
 
-  memset(frameBuffer, 0, FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
+  if (Check_Application_Present()) {
+    memset(frameBuffer, 0,
+           FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
 
-  DrawString(frameBuffer, "CHECK FIRMWARE", 100, 100, 0x001F); // White color
+    DrawString(frameBuffer, "RUN FIRMWARE", 100, 100, 0x001F);  // White color
 
-  HAL_Delay(5000);
+    HAL_Delay(delay_time);
 
-  if (Check_Application_Present())
-  {
-      memset(frameBuffer, 0, FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
+    Jump_To_Application();
+  } else {
+    HAL_Delay(delay_time);
 
-       DrawString(frameBuffer, "RUN FIRMWARE", 100, 100, 0x001F); // White color
+    memset(frameBuffer, 0,
+           FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
 
-       HAL_Delay(5000);
-
-      Jump_To_Application();
-  }
-  else
-  {
-      HAL_Delay(5000);
-
-      memset(frameBuffer, 0, FRAME_BUFFER_WIDTH * FRAME_BUFFER_HEIGHT * sizeof(uint16_t));
-
-      DrawString(frameBuffer, "NO FIRMWARE DETECTED", 100, 100, 0x001F); // White color
+    DrawString(frameBuffer, "NO FIRMWARE DETECTED", 100, 100,
+               0x001F);  // White color
     // No valid application, stay in bootloader
     // Here you can add code to wait for new firmware, e.g., via UART or USB
   }
-
-
-
 
   /* USER CODE END 2 */
 
@@ -388,13 +369,15 @@ int boot_main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  defaultTaskHandle =
+      osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of TouchGFXTask */
-  //TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);
+  // TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL,
+  // &TouchGFXTask_attributes);
 
   /* creation of videoTask */
-  //videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
+  // videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -411,8 +394,7 @@ int boot_main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+  while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -421,22 +403,21 @@ int boot_main(void)
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-  */
+   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -445,41 +426,36 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 432;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
     Error_Handler();
   }
 
   /** Activate the Over-Drive mode
-  */
-  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
-  {
+   */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
     Error_Handler();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
+                                RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
-  {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK) {
     Error_Handler();
   }
 }
 
 /**
-  * @brief CRC Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_CRC_Init(void)
-{
-
+ * @brief CRC Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_CRC_Init(void) {
   /* USER CODE BEGIN CRC_Init 0 */
 
   /* USER CODE END CRC_Init 0 */
@@ -493,24 +469,20 @@ static void MX_CRC_Init(void)
   hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_NONE;
   hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
   hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
-  if (HAL_CRC_Init(&hcrc) != HAL_OK)
-  {
+  if (HAL_CRC_Init(&hcrc) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN CRC_Init 2 */
 
   /* USER CODE END CRC_Init 2 */
-
 }
 
 /**
-  * @brief DMA2D Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_DMA2D_Init(void)
-{
-
+ * @brief DMA2D Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_DMA2D_Init(void) {
   /* USER CODE BEGIN DMA2D_Init 0 */
 
   /* USER CODE END DMA2D_Init 0 */
@@ -526,30 +498,25 @@ static void MX_DMA2D_Init(void)
   hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB8888;
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
   hdma2d.LayerCfg[1].InputAlpha = 0;
-  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK)
-  {
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) {
     Error_Handler();
   }
-  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK)
-  {
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN DMA2D_Init 2 */
 
   /* USER CODE END DMA2D_Init 2 */
-
 }
 
 /**
-  * @brief I2C3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C3_Init(void)
-{
-
+ * @brief I2C3 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_I2C3_Init(void) {
   /* USER CODE BEGIN I2C3_Init 0 */
-  HAL_Delay(100); //Delay to fix initialization issue on some boards
+  HAL_Delay(100);  // Delay to fix initialization issue on some boards
   /* USER CODE END I2C3_Init 0 */
 
   /* USER CODE BEGIN I2C3_Init 1 */
@@ -564,38 +531,32 @@ static void MX_I2C3_Init(void)
   hi2c3.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
   hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
   hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c3) != HAL_OK)
-  {
+  if (HAL_I2C_Init(&hi2c3) != HAL_OK) {
     Error_Handler();
   }
 
   /** Configure Analogue filter
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
+   */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
     Error_Handler();
   }
 
   /** Configure Digital filter
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK)
-  {
+   */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN I2C3_Init 2 */
 
   /* USER CODE END I2C3_Init 2 */
-
 }
 
 /**
-  * @brief LTDC Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_LTDC_Init(void)
-{
-
+ * @brief LTDC Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_LTDC_Init(void) {
   /* USER CODE BEGIN LTDC_Init 0 */
 
   /* USER CODE END LTDC_Init 0 */
@@ -621,8 +582,7 @@ static void MX_LTDC_Init(void)
   hltdc.Init.Backcolor.Blue = 0;
   hltdc.Init.Backcolor.Green = 0;
   hltdc.Init.Backcolor.Red = 0;
-  if (HAL_LTDC_Init(&hltdc) != HAL_OK)
-  {
+  if (HAL_LTDC_Init(&hltdc) != HAL_OK) {
     Error_Handler();
   }
   pLayerCfg.WindowX0 = 0;
@@ -640,24 +600,20 @@ static void MX_LTDC_Init(void)
   pLayerCfg.Backcolor.Blue = 0;
   pLayerCfg.Backcolor.Green = 0;
   pLayerCfg.Backcolor.Red = 0;
-  if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0) != HAL_OK)
-  {
+  if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN LTDC_Init 2 */
 
   /* USER CODE END LTDC_Init 2 */
-
 }
 
 /**
-  * @brief QUADSPI Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_QUADSPI_Init(void)
-{
-
+ * @brief QUADSPI Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_QUADSPI_Init(void) {
   /* USER CODE BEGIN QUADSPI_Init 0 */
 
   /* USER CODE END QUADSPI_Init 0 */
@@ -675,8 +631,7 @@ static void MX_QUADSPI_Init(void)
   hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
   hqspi.Init.FlashID = QSPI_FLASH_ID_1;
   hqspi.Init.DualFlash = QSPI_DUALFLASH_DISABLE;
-  if (HAL_QSPI_Init(&hqspi) != HAL_OK)
-  {
+  if (HAL_QSPI_Init(&hqspi) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN QUADSPI_Init 2 */
@@ -685,13 +640,10 @@ static void MX_QUADSPI_Init(void)
   BSP_QSPI_MemoryMappedMode();
   HAL_NVIC_DisableIRQ(QUADSPI_IRQn);
   /* USER CODE END QUADSPI_Init 2 */
-
 }
 
 /* FMC initialization function */
-static void MX_FMC_Init(void)
-{
-
+static void MX_FMC_Init(void) {
   /* USER CODE BEGIN FMC_Init 0 */
 
   /* USER CODE END FMC_Init 0 */
@@ -703,7 +655,7 @@ static void MX_FMC_Init(void)
   /* USER CODE END FMC_Init 1 */
 
   /** Perform the SDRAM1 memory initialization sequence
-  */
+   */
   hsdram1.Instance = FMC_SDRAM_DEVICE;
   /* hsdram1.Init */
   hsdram1.Init.SDBank = FMC_SDRAM_BANK1;
@@ -725,79 +677,106 @@ static void MX_FMC_Init(void)
   SdramTiming.RPDelay = 2;
   SdramTiming.RCDDelay = 2;
 
-  if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK)
-  {
-    Error_Handler( );
+  if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK) {
+    Error_Handler();
   }
 
   /* USER CODE BEGIN FMC_Init 2 */
   __IO uint32_t tmpmrd = 0;
 
-    /* Step 1: Configure a clock configuration enable command */
-    Command.CommandMode            = FMC_SDRAM_CMD_CLK_ENABLE;
-    Command.CommandTarget          =  FMC_SDRAM_CMD_TARGET_BANK1;
-    Command.AutoRefreshNumber      = 1;
-    Command.ModeRegisterDefinition = 0;
+  /* Step 1: Configure a clock configuration enable command */
+  Command.CommandMode = FMC_SDRAM_CMD_CLK_ENABLE;
+  Command.CommandTarget = FMC_SDRAM_CMD_TARGET_BANK1;
+  Command.AutoRefreshNumber = 1;
+  Command.ModeRegisterDefinition = 0;
 
-    /* Send the command */
-    HAL_SDRAM_SendCommand(&hsdram1, &Command, SDRAM_TIMEOUT);
+  /* Send the command */
+  HAL_SDRAM_SendCommand(&hsdram1, &Command, SDRAM_TIMEOUT);
 
-    /* Step 2: Insert 100 us minimum delay */
-    /* Inserted delay is equal to 1 ms due to systick time base unit (ms) */
-    HAL_Delay(1);
+  /* Step 2: Insert 100 us minimum delay */
+  /* Inserted delay is equal to 1 ms due to systick time base unit (ms) */
+  HAL_Delay(1);
 
-    /* Step 3: Configure a PALL (precharge all) command */
-    Command.CommandMode            = FMC_SDRAM_CMD_PALL;
-    Command.CommandTarget          = FMC_SDRAM_CMD_TARGET_BANK1;
-    Command.AutoRefreshNumber      = 1;
-    Command.ModeRegisterDefinition = 0;
+  /* Step 3: Configure a PALL (precharge all) command */
+  Command.CommandMode = FMC_SDRAM_CMD_PALL;
+  Command.CommandTarget = FMC_SDRAM_CMD_TARGET_BANK1;
+  Command.AutoRefreshNumber = 1;
+  Command.ModeRegisterDefinition = 0;
 
-    /* Send the command */
-    HAL_SDRAM_SendCommand(&hsdram1, &Command, SDRAM_TIMEOUT);
+  /* Send the command */
+  HAL_SDRAM_SendCommand(&hsdram1, &Command, SDRAM_TIMEOUT);
 
-    /* Step 4: Configure an Auto Refresh command */
-    Command.CommandMode            = FMC_SDRAM_CMD_AUTOREFRESH_MODE;
-    Command.CommandTarget          = FMC_SDRAM_CMD_TARGET_BANK1;
-    Command.AutoRefreshNumber      = 8;
-    Command.ModeRegisterDefinition = 0;
+  /* Step 4: Configure an Auto Refresh command */
+  Command.CommandMode = FMC_SDRAM_CMD_AUTOREFRESH_MODE;
+  Command.CommandTarget = FMC_SDRAM_CMD_TARGET_BANK1;
+  Command.AutoRefreshNumber = 8;
+  Command.ModeRegisterDefinition = 0;
 
-    /* Send the command */
-    HAL_SDRAM_SendCommand(&hsdram1, &Command, SDRAM_TIMEOUT);
+  /* Send the command */
+  HAL_SDRAM_SendCommand(&hsdram1, &Command, SDRAM_TIMEOUT);
 
-    /* Step 5: Program the external memory mode register */
-    tmpmrd = (uint32_t)SDRAM_MODEREG_BURST_LENGTH_1 | \
-             SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL    | \
-             SDRAM_MODEREG_CAS_LATENCY_3            | \
-             SDRAM_MODEREG_OPERATING_MODE_STANDARD  | \
-             SDRAM_MODEREG_WRITEBURST_MODE_SINGLE;
+  /* Step 5: Program the external memory mode register */
+  tmpmrd = (uint32_t)SDRAM_MODEREG_BURST_LENGTH_1 |
+           SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL | SDRAM_MODEREG_CAS_LATENCY_3 |
+           SDRAM_MODEREG_OPERATING_MODE_STANDARD |
+           SDRAM_MODEREG_WRITEBURST_MODE_SINGLE;
 
-    Command.CommandMode            = FMC_SDRAM_CMD_LOAD_MODE;
-    Command.CommandTarget          = FMC_SDRAM_CMD_TARGET_BANK1;
-    Command.AutoRefreshNumber      = 1;
-    Command.ModeRegisterDefinition = tmpmrd;
+  Command.CommandMode = FMC_SDRAM_CMD_LOAD_MODE;
+  Command.CommandTarget = FMC_SDRAM_CMD_TARGET_BANK1;
+  Command.AutoRefreshNumber = 1;
+  Command.ModeRegisterDefinition = tmpmrd;
 
-    /* Send the command */
-    HAL_SDRAM_SendCommand(&hsdram1, &Command, SDRAM_TIMEOUT);
+  /* Send the command */
+  HAL_SDRAM_SendCommand(&hsdram1, &Command, SDRAM_TIMEOUT);
 
-    /* Step 6: Set the refresh rate counter */
-    /* Set the device refresh rate */
-    HAL_SDRAM_ProgramRefreshRate(&hsdram1, REFRESH_COUNT);
+  /* Step 6: Set the refresh rate counter */
+  /* Set the device refresh rate */
+  HAL_SDRAM_ProgramRefreshRate(&hsdram1, REFRESH_COUNT);
 
-    //Deactivate speculative/cache access to first FMC Bank to save FMC bandwidth
-    FMC_Bank1->BTCR[0] = 0x000030D2;
+  // Deactivate speculative/cache access to first FMC Bank to save FMC bandwidth
+  FMC_Bank1->BTCR[0] = 0x000030D2;
   /* USER CODE END FMC_Init 2 */
 }
 
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
+void Peripherial_DeInit(void)
 {
+  // Disable all interrupts
+  __disable_irq();
+
+  // Stop all RTOS tasks and scheduler
+  vTaskSuspendAll();
+  taskENTER_CRITICAL();
+
+  // Deinitialize all peripherals
+  HAL_CRC_DeInit(&hcrc);
+  HAL_DMA2D_DeInit(&hdma2d);
+  HAL_I2C_DeInit(&hi2c3);
+  HAL_LTDC_DeInit(&hltdc);
+  HAL_QSPI_DeInit(&hqspi);
+  HAL_SDRAM_DeInit(&hsdram1);
+
+  // Reset clocks to default state
+  HAL_RCC_DeInit();
+
+  // Disable MPU
+  HAL_MPU_Disable();
+
+  // Disable and clean caches
+  SCB_DisableICache();
+  SCB_DisableDCache();
+  SCB_InvalidateICache();
+  SCB_CleanInvalidateDCache();
+}
+
+/**
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_GPIO_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -822,7 +801,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LCD_DISP_GPIO_Port, LCD_DISP_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, FRAME_RATE_Pin|RENDER_TIME_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, FRAME_RATE_Pin | RENDER_TIME_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(MCU_ACTIVE_GPIO_Port, MCU_ACTIVE_Pin, GPIO_PIN_RESET);
@@ -849,7 +828,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(LCD_DISP_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : FRAME_RATE_Pin RENDER_TIME_Pin */
-  GPIO_InitStruct.Pin = FRAME_RATE_Pin|RENDER_TIME_Pin;
+  GPIO_InitStruct.Pin = FRAME_RATE_Pin | RENDER_TIME_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -862,147 +841,54 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(MCU_ACTIVE_GPIO_Port, &GPIO_InitStruct);
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-
-static void Jump_To_Application(void)
-{
-  // Disable all interrupts
-      __disable_irq();
-
-      // Stop all RTOS tasks and scheduler
-      vTaskSuspendAll();
-      taskENTER_CRITICAL();
-
-      // Deinitialize all peripherals
-      HAL_CRC_DeInit(&hcrc);
-      HAL_DMA2D_DeInit(&hdma2d);
-      HAL_I2C_DeInit(&hi2c3);
-      HAL_LTDC_DeInit(&hltdc);
-      HAL_QSPI_DeInit(&hqspi);
-      HAL_SDRAM_DeInit(&hsdram1);
-
-      // Reset clocks to default state
-      HAL_RCC_DeInit();
-
-      // Disable MPU
-      HAL_MPU_Disable();
-
-      // Disable and clean caches
-      SCB_DisableICache();
-      SCB_DisableDCache();
-      SCB_InvalidateICache();
-      SCB_CleanInvalidateDCache();
-
-      // Disable SysTick
-      SysTick->CTRL = 0;
-
-      // Reset all peripherals
-      HAL_DeInit();
-
-      // Set the vector table to the application's vector table
-      SCB->VTOR = APPLICATION_ADDRESS;
-
-      // Set the stack pointer to the application's stack pointer
-      __set_MSP(*(__IO uint32_t*)APPLICATION_ADDRESS);
-
-      // Jump to the application
-      ((void (*)(void))(*(__IO uint32_t*)(APPLICATION_ADDRESS + 4)))();
-}
-
-//static uint8_t Check_Application_Present(void)
-//{
-//  // Check if the stack pointer in the vector table is a valid RAM address
-//  if (((*(uint32_t*)APPLICATION_ADDRESS) & 0x2FFE0000) == 0x20000000)
-//  {
-//    return 1;  // Application is present
-//  }
-//  return 0;  // No valid application found
-//}
-
-
-
-
-static uint8_t Check_Application_Present(void)
-{
-  // Sprawdź, czy wskaźnik stosu w tablicy wektorów jest w zakresie SRAM
-      uint32_t sp = *(volatile uint32_t*)APPLICATION_ADDRESS;
-      if (sp < SRAM_BASE || sp > SRAM_END)
-      {
-          return 0;  // Nieprawidłowy wskaźnik stosu
-      }
-
-      // Sprawdź, czy wektor resetu wskazuje na prawidłowy adres flash
-      uint32_t pc = *(volatile uint32_t*)(APPLICATION_ADDRESS + 4);
-      if (pc < FLASH_BASE || pc > FLASH_END)
-      {
-          return 0;  // Nieprawidłowy wektor resetu
-      }
-
-  // Sprawdź, czy pierwsze kilka wektorów przerwań nie jest pustych (0xFFFFFFFF)
-  for (int i = 0; i < 8; i++)
-  {
-      uint32_t vector = *(volatile uint32_t*)(APPLICATION_ADDRESS + i * 4);
-      if (vector == 0xFFFFFFFF)
-      {
-          return 0;  // Znaleziono pusty wektor
-      }
-  }
-
-  // Jeśli wszystkie sprawdzenia przejdą, zakładamy, że aplikacja jest obecna
-  return 1;
-}
 
 
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
 /**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
+void StartDefaultTask(void *argument) {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  for(;;)
-  {
+  for (;;) {
     osDelay(100);
   }
   /* USER CODE END 5 */
 }
 
-BaseType_t IdleTaskHook(void* p)
-{
-    // Tutaj umieść kod, który ma być wykonywany przez IdleTaskHook
-    // Na przykład:
-    if ((int)p) // idle task sched out
-    {
-        // Kod do wykonania, gdy zadanie bezczynności jest zaplanowane
-    }
-    else // idle task sched in
-    {
-        // Kod do wykonania, gdy zadanie bezczynności jest uruchamiane
-    }
-    return pdTRUE;
+BaseType_t IdleTaskHook(void *p) {
+  // Tutaj umieść kod, który ma być wykonywany przez IdleTaskHook
+  // Na przykład:
+  if ((int)p)  // idle task sched out
+  {
+    // Kod do wykonania, gdy zadanie bezczynności jest zaplanowane
+  } else  // idle task sched in
+  {
+    // Kod do wykonania, gdy zadanie bezczynności jest uruchamiane
+  }
+  return pdTRUE;
 }
 
- /* MPU Configuration */
+/* MPU Configuration */
 
-void MPU_Config(void)
-{
+void MPU_Config(void) {
   MPU_Region_InitTypeDef MPU_InitStruct = {0};
 
   /* Disables the MPU */
   HAL_MPU_Disable();
 
   /** Initializes and configures the Region and the memory to be protected
-  */
+   */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.Number = MPU_REGION_NUMBER0;
   MPU_InitStruct.BaseAddress = 0x90000000;
@@ -1018,7 +904,7 @@ void MPU_Config(void)
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
   /** Initializes and configures the Region and the memory to be protected
-  */
+   */
   MPU_InitStruct.Number = MPU_REGION_NUMBER1;
   MPU_InitStruct.Size = MPU_REGION_SIZE_16MB;
   MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
@@ -1026,19 +912,17 @@ void MPU_Config(void)
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
   /* Enables the MPU */
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
-
 }
 
 /**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM6 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
+ * @brief  Period elapsed callback in non blocking mode
+ * @note   This function is called  when TIM6 interrupt took place, inside
+ * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+ * a global variable "uwTick" used as application time base.
+ * @param  htim : TIM handle
+ * @retval None
+ */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
@@ -1051,30 +935,32 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
 
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
+void assert_failed(uint8_t *file, uint32_t line) {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* User can add his own implementation to report the file name and line
+     number, tex: printf("Wrong parameters value: file %s on line %d\r\n", file,
+     line) */
+#ifdef DEBUG
+  __BKPT(0);
+#endif /* DEBUG */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
